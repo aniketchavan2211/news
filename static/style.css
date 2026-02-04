@@ -1,0 +1,70 @@
+/* ===== Base layout ===== */
+body {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: sans-serif;
+  line-height: 1.6;
+  color: #111;
+  background-color: #fff;
+}
+
+header {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* ===== Bulletin entries ===== */
+article {
+  margin-bottom: 2.5rem;
+}
+
+article time {
+  display: block;
+  font-size: 0.85rem;
+  color: #444;
+  margin-bottom: 0.3rem;
+}
+
+iframe {
+  width: 100%;
+  border: none;
+}
+/* ==== Article ==== */
+article {
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px dashed #ccc;
+}
+
+article:last-child {
+  border-bottom: none;
+}
+
+article time {
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+
+iframe {
+  min-height: 4rem;
+}
+
+/* ===== Footer ===== */
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ccc;
+  font-size: 0.8rem;
+  color: #555;
+}
