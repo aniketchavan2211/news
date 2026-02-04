@@ -2,7 +2,7 @@
 pub const BIND_ADDR: &str = "127.0.0.1:8080";
 
 // Filesystem
-pub const INDEX_PATH: &str = "/opt/news/static/index.html";
+pub const INDEX_PATH: &str = "static/index.html";
 
 // Global request limits
 pub const MAX_REQUEST_SIZE: usize = 8 * 1024; // 8 KB total
