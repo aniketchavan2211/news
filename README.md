@@ -135,6 +135,7 @@ Run tests with:
 
 ```sh
 cargo test --features test-support
+```
 
 ---
 
