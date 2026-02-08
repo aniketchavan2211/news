@@ -1,0 +1,9 @@
+RunAsDaemon 0
+
+DataDirectory /srv/tor
+
+SocksPort 127.0.0.1:9050
+
+HiddenServiceDir /srv/tor/hs
+HiddenServiceVersion 3
+HiddenServicePort 80 127.0.0.1:8080
