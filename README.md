@@ -1,13 +1,13 @@
-# News Service (Phase A)
+# News Service
 
-A minimal, security-focused, read-only news service written in Rust.
+A minimal, security-focused, **read-only news service** written in Rust.
 
-This project is designed with a **deny-by-default** philosophy and a strict scope:
-static content delivery only, no user interaction, no dynamic behavior.
+This project is designed with a **deny-by-default** philosophy and a deliberately
+restricted scope: **static content delivery only**, with no user interaction and
+no dynamic behavior.
 
-Phase A focuses exclusively on correctness, predictability, and attack-surface
-reduction. Later phases will address deployment, filesystem hardening, and Tor
-integration.
+The service is intended to be suitable for **privacy-conscious deployments**,
+including Tor onion services.
 
 ---
 
@@ -17,25 +17,48 @@ integration.
 - Serve **static HTML and CSS only**
 - Enforce **strict HTTP parsing and limits**
 - Avoid user input, state, or dynamic routing
-- Remain suitable for privacy-conscious and onion-style deployments
+- Minimize attack surface by design
+- Remain predictable and auditable
 
-This is **not** a blog engine, CMS, or interactive service.
+This is **not**:
+- a CMS
+- a blog engine
+- an API
+- an interactive service
 
 ---
 
-## Phase A Scope (Completed)
+## Phased Development Model
 
-Phase A establishes a hardened application core.
+This project follows a **phased, security-first development model**.
+
+Each phase is:
+- implemented
+- tested
+- documented
+- frozen
+
+Later phases may change *deployment or execution context*, but **do not alter
+behavior defined in earlier phases**.
+
+Simplicity and predictability are treated as security features.
+
+---
+
+## Phase A — Application Core (Completed)
+
+Phase A establishes a hardened, deterministic HTTP service.
 
 ### Included
-- Minimal HTTP/1.1 server
-- Static allow-listed paths only:
+- Minimal HTTP/1.1 server (GET / HEAD only)
+- Strict request parsing and validation
+- Explicit size and structure limits
+- Deterministic error handling
+- Integration tests covering protocol boundaries
+- Static allow-listed routing only:
   - `/`
-  - `/style.css`
-  - `/entries/*.html`
-- Deterministic request handling
-- Explicit request size and structure limits
-- Integration tests for protocol boundaries
+  - `/static/style.css`
+  - `/static/entries/*.html`
 
 ### Explicitly Excluded
 - User input
@@ -51,48 +74,50 @@ Phase A establishes a hardened application core.
 
 ## Architecture Overview
 
-Client | |  HTTP/1.1 (GET / HEAD only) v Rust TCP Listener | v Strict Request Validation | +-- Reject malformed / oversized requests | +-- Route allow-listed static paths | v Static File Response
+```bash
+Client -> HTTP/1.1 (GET / HEAD only) -> Strict Request Validation -> +-- Reject malformed / oversized requests ->  Allow-listed Routing -> Static File Response
+```
+
 Routing occurs **only after validation**.
 
-Malformed requests are rejected early and never reach routing logic.
+Malformed or oversized requests are rejected early and never reach routing logic.
 
 ---
 
 ## Static Content Model
 
-Content is intentionally simple:
+Content is intentionally simple and flat:
 
-- `index.html` — main News page
-- `style.css` — minimal styling
-- `entries/YYYY-MM-DD.html` — individual news entries
-- Entries are embedded via same-origin iframes
+- `static/index.html` — main news page
+- `static/style.css` — minimal styling
+- `static/entries/YYYY-MM-DD.html` — individual entries
 
-This structure:
-- avoids pagination logic
-- avoids metadata aggregation
-- keeps each entry isolated and simple
+Entries are embedded using **same-origin iframes**, which:
+- avoid pagination logic
+- avoid metadata aggregation
+- keep each entry isolated
+- simplify auditing and removal
 
 ---
 
 ## Security Design Principles
 
 ### 1. Deny by Default
-Only known, allow-listed paths are served. Everything else returns `404`.
+Only explicitly allow-listed paths are served.
+All other requests return `404`.
 
 ### 2. Strict Input Validation
 - Maximum request size enforced
 - Maximum request line length enforced
-- Maximum header count enforced
 - Unsupported methods rejected (`405`)
-
-Malformed input is rejected deterministically.
+- Malformed input rejected deterministically
 
 ### 3. Minimal Attack Surface
-- No dynamic memory growth
+- No dynamic routing
 - No user-controlled file paths
 - No script execution
-- No external assets
 - No background tasks
+- No external dependencies at runtime
 
 ### 4. Predictable HTTP Behavior
 The server never guesses intent.
@@ -108,12 +133,14 @@ All responses include:
 - `X-Frame-Options: SAMEORIGIN`
 - `Cache-Control: no-store`
 - `Connection: close`
+- A strict `Content-Security-Policy`
 
 These headers:
 - prevent MIME confusion
 - prevent clickjacking
-- avoid client-side caching
+- disable client-side caching
 - reduce protocol ambiguity
+- prevent script execution
 
 ---
 
@@ -129,81 +156,85 @@ Tests verify:
 - Excessive headers return `431`
 - Unknown paths return `404`
 
-Testing is deterministic and does not rely on mocks or async frameworks.
+Testing is deterministic and avoids mocks or async frameworks.
 
 Run tests with:
 
 ```sh
-cargo test --features test-support
+cargo test
 ```
 
----
-
 ## Threat Model (Phase A)
-
 ### Assumptions
+
 - Service binds locally
-- No TLS (handled externally)
+
+- TLS handled externally
+
 - No trust in client input
 
 ### Non-Goals
-- Resistance to authenticated attackers
+
 - Content confidentiality
-- Traffic analysis protection
+
+- Traffic analysis resistance
+
+- Authenticated user security
+
+These are addressed in later phases.
 
 ## Phase Status
-- Phase A: ✅ Complete
-- Phase B: Filesystem layout, non-root execution, permissions
-- Phase C: Tor onion service integration
-- Phase D: Deployment hardening and operations
 
+Phase A — Application core: ✅ Complete
 
-## License / Attribution
+Phase B — Filesystem layout, non-root execution: ✅ Complete
+
+Phase C — Tor onion service integration: ✅ Complete
+
+Phase C+ — Tor client authentication: ⏳ In Progress
+
+Phase D — Deployment & operations hardening: ⏳ Planned
+
+## Directory Structure (Current)
+```bash
+├── news
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── src
+│   │   ├── config.rs
+│   │   ├── http.rs
+│   │   ├── lib.rs
+│   │   ├── main.rs
+│   │   └── server.rs
+│   ├── static
+│   │   ├── entries
+│   │   │   └── 2026-02-04.html
+│   │   ├── index.html
+│   │   └── style.css
+│   └── tests
+│       └── http.rs
+├── README.md
+└── torrc
+
+```
+
+## Attribution
 
 Content published by ***Th3 R0gu3 Kn!ghts***.
 
-This project intentionally avoids embedding identifying metadata in served pages.
-
-## Development Philosophy
-
-This project follows a phased, security-first development model.
-
-Each phase is completed, tested, documented, and frozen before moving forward.
-Later phases may change deployment, execution context, or operating environment,
-but do not retroactively change the behavior defined in earlier phases.
-
-Simplicity and predictability are treated as security features.
-
-## Directory Structure (Phase A)
-
-```bash
-bulletin-board
-└── bulletin_board
-    ├── Cargo.lock
-    ├── Cargo.toml
-    ├── README.md
-    ├── src
-    │   ├── config.rs
-    │   ├── http.rs
-    │   ├── lib.rs
-    │   ├── main.rs
-    │   └── server.rs
-    ├── static
-    │   ├── entries
-    │   ├── index.html
-    │   └── style.css
-    ├── target
-    │   ├── CACHEDIR.TAG
-    │   ├── debug
-    │   ├── release
-    │   └── tmp
-    └── tests
-        └── http.rs
-```
+The service intentionally avoids embedding identifying metadata in responses or
+served content.
 
 ## Contributions
 
 This project is intentionally conservative.
 
-Changes that increase complexity, introduce dynamic behavior, or expand the
-attack surface will be rejected unless explicitly planned for in a future phase.
+Changes that:
+
+- increase complexity
+
+- introduce dynamic behavior
+
+- expand the attack surface
+
+will be rejected unless explicitly planned for in a future phase.
